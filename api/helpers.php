@@ -63,7 +63,7 @@ function _sign(string $method, string $path, string $payload): array {
 // '_status' = 0 means connection failed entirely
 function bot_get(string $path, string $query): array {
     $auth = _sign('GET', $path, '');
-    $url  = get_config()['referral_api']['base_url'] . $path . '?' . $query;
+    $url  = get_config()['referral_api']['base_url'] . $path . ($query !== '' ? '?' . $query : '');
     $ctx  = stream_context_create(['http' => [
         'method'        => 'GET',
         'header'        => "X-Timestamp: {$auth['ts']}\r\nX-HMAC-Signature: {$auth['sig']}\r\n",

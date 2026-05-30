@@ -100,6 +100,54 @@ function Receipt({ result, username, generosity, onReset }) {
   );
 }
 
+// ── Already claimed notice ────────────────────────────────
+function AlreadyClaimed({ username, onReset }) {
+  return (
+    <div className="already-card">
+      <div className="ac-icon"><Icon name="shield" size={32} /></div>
+      <div className="ac-title">Already claimed</div>
+      {username && (
+        <div className="ac-user">
+          <span className="ac-at">@</span>{username}
+        </div>
+      )}
+      <div className="ac-msg">
+        This Telegram account has already received sats from this faucet.
+        Each account can only claim once.
+      </div>
+      <button className="rc-reset" onClick={onReset}>Try a different account ↺</button>
+    </div>
+  );
+}
+
+// ── Pending admin approval ────────────────────────────────
+function PendingApproval({ data, onReset }) {
+  const terminal = data?.terminal;
+  return (
+    <div className={"pending-card" + (terminal ? " pa-terminal" : "")}>
+      <div className="pa-icon">
+        {terminal ? <Icon name="shield" size={32} /> : <span className="spin-ring lg" />}
+      </div>
+      <div className="pa-title">
+        {terminal === "rejected" ? "Transaction rejected"
+          : terminal === "expired" ? "Approval expired"
+          : "Awaiting admin approval"}
+      </div>
+      <div className="pa-amount">{fmt(data.amount)} <span className="pa-unit">sats</span></div>
+      {data.amountLkr && <div className="pa-lkr">LKR {data.amountLkr}</div>}
+      <div className="pa-msg">
+        {terminal === "rejected"
+          ? "The admin declined this transaction. Please contact support if you think this is an error."
+          : terminal === "expired"
+          ? "The approval request was not acted on within 24 hours. Please contact support to retry."
+          : "This transfer exceeds the auto-approval limit. An admin has been notified via Telegram and will approve it shortly."}
+      </div>
+      {!terminal && <div className="pa-waiting"><span className="spin-ring sm" /> Checking every 10 seconds…</div>}
+      <button className="rc-reset" onClick={onReset}>← Back</button>
+    </div>
+  );
+}
+
 // ── Luma subscription verify step ─────────────────────────
 function LumaStep({ locked, opened, onOpen, email, setEmail, state, err, onVerify, lumaUrl }) {
   const verified = state === "verified";
@@ -158,9 +206,11 @@ function ClaimCard({ t }) {
   const [lumaErr, setLumaErr] = React.useState("");
   const [username, setUsername] = React.useState("");
   const s2 = lumaState === "verified";
-  const [phase, setPhase] = React.useState("idle"); // idle | rolling | done
+  const [phase, setPhase] = React.useState("idle"); // idle | rolling | done | pending
   const [display, setDisplay] = React.useState(0);
   const [result, setResult] = React.useState(null);
+  const [pendingData, setPendingData] = React.useState(null);
+  const [claimErr, setClaimErr] = React.useState("");
 
   // ── fetch or restore session ID ──────────────────────────
   React.useEffect(() => {
@@ -210,6 +260,7 @@ function ClaimCard({ t }) {
             if (d.username) setUsername(d.username);
           } else if (d.already_claimed) {
             setTelegramState("blocked");
+            if (d.username) setUsername(d.username);
             setTelegramErr(d.message || "This Telegram account has already claimed.");
           }
         })
@@ -219,6 +270,31 @@ function ClaimCard({ t }) {
     const id = setInterval(ping, 5000);
     return () => clearInterval(id);
   }, [telegramState, sessionId]);
+
+  // ── 10-second poll while awaiting admin approval ─────────
+  React.useEffect(() => {
+    if (phase !== "pending" || !sessionId) return;
+    const poll = () => {
+      fetch(API_BASE + "/poll-claim.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session_id: sessionId }),
+      })
+        .then(r => r.json())
+        .then(d => {
+          if (d.approved) {
+            setResult({ amt: d.amount, tier: d.tier || "Common" });
+            setPhase("done");
+          } else if (d.terminal) {
+            setPendingData(prev => ({ ...prev, terminal: d.terminal }));
+          }
+        })
+        .catch(() => {});
+    };
+    poll();
+    const id = setInterval(poll, 10000);
+    return () => clearInterval(id);
+  }, [phase, sessionId]);
 
   const openTelegram = () => {
     if (!sessionId) return;
@@ -269,9 +345,24 @@ function ClaimCard({ t }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ session_id: sessionId, generosity: t.generosity }),
     })
-      .then(r => r.json())
+      .then(async r => { const d = await r.json(); return { _http: r.status, ...d }; })
       .then(d => {
-        if (!d.amount) { clearInterval(spinTimer); setPhase("idle"); alert(d.error || "Claim failed."); return; }
+        if (d._http === 202) {
+          clearInterval(spinTimer);
+          setPendingData({ message: d.message, amount: d.amount, amountLkr: d.amount_lkr, memo: d.memo });
+          setPhase("pending");
+          return;
+        }
+        if (!d.amount || d.error) {
+          clearInterval(spinTimer);
+          const raw = d.error || d.message || "Claim failed.";
+          setClaimErr(raw.toLowerCase().startsWith("insufficient balance")
+            ? "The Daane faucet is temporarily empty — please check back soon!"
+            : raw);
+          setPhase("idle");
+          return;
+        }
+        setClaimErr("");
         const countUp = (targetAmt, targetTier) => {
           if (spins < 13) { setTimeout(() => countUp(targetAmt, targetTier), 100); return; }
           const t0 = Date.now();
@@ -289,11 +380,11 @@ function ClaimCard({ t }) {
         };
         countUp(d.amount, d.tier);
       })
-      .catch(() => { clearInterval(spinTimer); setPhase("idle"); alert("Network error. Please try again."); });
+      .catch(() => { clearInterval(spinTimer); setClaimErr("Network error. Please try again."); setPhase("idle"); });
   };
 
   const reset = () => {
-    setResult(null); setPhase("idle"); setDisplay(0);
+    setResult(null); setPhase("idle"); setDisplay(0); setPendingData(null); setClaimErr("");
     setTelegramState("idle"); setSessionId(null);
     setEmail(""); setLumaOpened(false); setLumaState("idle"); setLumaErr(""); setUsername("");
     try { localStorage.removeItem(STORE_KEY); } catch (e) {}
@@ -317,6 +408,10 @@ function ClaimCard({ t }) {
 
       {phase === "done" ? (
         <Receipt result={result} username={username || email} generosity={t.generosity} onReset={reset} />
+      ) : phase === "pending" ? (
+        <PendingApproval data={pendingData} onReset={reset} />
+      ) : telegramState === "blocked" ? (
+        <AlreadyClaimed username={username} onReset={reset} />
       ) : (
         <React.Fragment>
           <div className="steps">
@@ -351,6 +446,8 @@ function ClaimCard({ t }) {
               ? (<React.Fragment><span className="cb-num">{fmt(display)}</span><span className="cb-spin">lighting your lantern…</span></React.Fragment>)
               : (<React.Fragment><Icon name="bolt" size={20} /><span>{ready ? "Claim my sats" : "Complete steps 1 & 2"}</span></React.Fragment>)}
           </button>
+
+          {claimErr && <div className="claim-err"><Icon name="shield" size={14} /><span>{claimErr}</span></div>}
 
           <div className="cc-fineprint">
             <Icon name="shield" size={14} />

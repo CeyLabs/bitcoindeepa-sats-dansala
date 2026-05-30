@@ -32,11 +32,14 @@ try {
           amount               INT UNSIGNED    DEFAULT NULL,
           tier                 VARCHAR(32)     DEFAULT NULL,
           tx_hash              VARCHAR(255)    DEFAULT NULL,
+          pending_tx_id        VARCHAR(255)    DEFAULT NULL,
+          send_error           VARCHAR(500)    DEFAULT NULL,
           status               ENUM(
                                  'pending',
                                  'telegram_verified',
                                  'luma_verified',
                                  'claimed',
+                                 'pending_approval',
                                  'sent'
                                ) NOT NULL DEFAULT 'pending',
           created_at           DATETIME        NOT NULL,

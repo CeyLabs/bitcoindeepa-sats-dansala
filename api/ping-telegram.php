@@ -57,7 +57,7 @@ $already = $pdo->prepare(
 );
 $already->execute([$telegram_id]);
 if ($already->fetch()) {
-    json_out(['verified' => false, 'already_claimed' => true, 'message' => 'This Telegram account has already claimed sats from this faucet.']);
+    json_out(['verified' => false, 'already_claimed' => true, 'username' => $username, 'message' => 'This Telegram account has already claimed sats from this faucet.']);
 }
 
 $pdo->prepare(

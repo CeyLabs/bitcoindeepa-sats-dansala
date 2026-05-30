@@ -16,7 +16,7 @@ const TELEGRAM_URL = "https://t.me/bitcoindeepabot";
 const LUMA_URL = "https://luma.com/bitcoindeepa?period=past";
 const STORE_KEY = "sats-dansala-v1";
 
-// tiers + max_amount loaded from /api/config-public.php — seeded with fallback
+// tiers + max_amount + generosity loaded from /api/config-public.php — seeded with fallback
 let TIERS = {
   stingy:   [[0.78, 100, 999, "Common"], [0.95, 1000, 2499, "Generous"], [0.992, 2500, 5999, "Lucky"], [1, 6000, 10000, "Jackpot"]],
   balanced: [[0.62, 100, 999, "Common"], [0.88, 1000, 2999, "Generous"], [0.975, 3000, 6999, "Lucky"], [1, 7000, 10000, "Jackpot"]],
@@ -95,7 +95,7 @@ function Receipt({ result, username, onReset }) {
       </div>
       <div className="rc-foot">
         <DeepaMark size={18} />
-        <button className="rc-reset" onClick={onReset}>Claim again (demo) ↺</button>
+        <button className="rc-reset" onClick={onReset}>Claim again ↺</button>
       </div>
     </div>
   );

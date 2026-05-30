@@ -1,0 +1,6 @@
+# Local config — copy api/config.example.php to api/config.php and fill in secrets
+api/config.php
+
+# Logs
+*.log
+api/logs/

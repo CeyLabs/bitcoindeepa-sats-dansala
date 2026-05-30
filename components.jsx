@@ -1,0 +1,105 @@
+// components.jsx — Vesak visual vocabulary for Sats Dansala
+// All components exported to window at the end.
+
+// ── Bitcoin Deepa wordmark ────────────────────────────────
+// "Deepa" = lamp/light. The dot of the 'i' is a lit flame.
+function DeepaMark({ size = 26 }) {
+  return (
+    <span className="deepa-mark" style={{ fontSize: size }}>
+      <span className="dm-bolt" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="1em" height="1em" fill="none">
+          <circle cx="12" cy="12" r="11" fill="var(--orange)" />
+          <path d="M13.1 4.5 7 13.2h3.7l-1.1 6.3 6.4-9.1h-3.9z" fill="#0E0E0E" />
+        </svg>
+      </span>
+      <span className="dm-text">Bitcoin&nbsp;Deepa</span>
+    </span>
+  );
+}
+
+// ── Vesak star lantern (kuudu) — two overlaid triangles ───
+function Lantern({ size = 120, hue = "warm", className = "", style = {} }) {
+  return (
+    <div className={"lantern " + className} style={{ width: size, height: size * 1.55, ...style }}>
+      <div className="lan-string" />
+      <div className={"lan-star hue-" + hue} style={{ width: size, height: size }}>
+        <span className="tri up" />
+        <span className="tri down" />
+        <span className="lan-core" />
+      </div>
+      <div className="lan-tassels">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <span className="tassel" key={i} style={{ animationDelay: (i * 0.18) + "s" }} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Oil-lamp flame (the "deepa") ──────────────────────────
+function Flame({ size = 64, lit = true }) {
+  return (
+    <span className={"flame " + (lit ? "is-lit" : "")} style={{ width: size, height: size * 1.35 }}>
+      <span className="flame-body" />
+      <span className="flame-core" />
+    </span>
+  );
+}
+
+// ── small line icons ──────────────────────────────────────
+function Icon({ name, size = 22 }) {
+  const p = {
+    width: size, height: size, viewBox: "0 0 24 24", fill: "none",
+    stroke: "currentColor", strokeWidth: 1.7, strokeLinecap: "round", strokeLinejoin: "round",
+  };
+  switch (name) {
+    case "telegram":
+      return (<svg {...p}><path d="M21.5 4.3 2.8 11.2c-.9.34-.88 1.62.03 1.93l4.7 1.6 1.8 5.5c.25.74 1.2.9 1.68.28l2.5-3.1 4.7 3.45c.62.46 1.5.12 1.66-.64L23 5.4c.2-.95-.7-1.7-1.5-1.1z" /><path d="M8 14.7 17.5 7" /></svg>);
+    case "luma":
+      return (<svg {...p}><rect x="3" y="4.5" width="18" height="16" rx="2.4" /><path d="M3 9h18" /><path d="M8 3v3M16 3v3" /><circle cx="12" cy="14.5" r="2.4" /></svg>);
+    case "gift":
+      return (<svg {...p}><rect x="3.5" y="9" width="17" height="11.5" rx="1.6" /><path d="M2.5 9h19M12 9v11.5" /><path d="M12 9C12 6 10.5 4 8.5 4S6 7 8 9zM12 9c0-3 1.5-5 3.5-5S18 7 16 9z" /></svg>);
+    case "check":
+      return (<svg {...p}><path d="M20 6 9 17l-5-5" /></svg>);
+    case "bolt":
+      return (<svg {...p}><path d="M13 2 4 14h7l-1 8 9-12h-7z" fill="currentColor" stroke="none" /></svg>);
+    case "shield":
+      return (<svg {...p}><path d="M12 3 5 6v5c0 4.2 2.9 7.6 7 9 4.1-1.4 7-4.8 7-9V6z" /><path d="M9.2 12l2 2 3.6-4" /></svg>);
+    case "users":
+      return (<svg {...p}><circle cx="9" cy="8" r="3.2" /><path d="M3.5 18.5c.4-2.7 2.7-4.5 5.5-4.5s5.1 1.8 5.5 4.5" /><circle cx="16.2" cy="9" r="2.5" /><path d="M14 14.7c.7-.4 1.5-.7 2.4-.7 2.4 0 4.3 1.5 4.6 3.8" /></svg>);
+    case "arrow":
+      return (<svg {...p}><path d="M5 12h14M13 6l6 6-6 6" /></svg>);
+    case "external":
+      return (<svg {...p}><path d="M14 4h6v6M20 4l-9 9M19 14v5a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5" /></svg>);
+    default:
+      return null;
+  }
+}
+
+// ── spark burst on claim ──────────────────────────────────
+function SparkBurst({ run }) {
+  const sparks = React.useMemo(
+    () => Array.from({ length: 26 }).map((_, i) => {
+      const ang = (i / 26) * Math.PI * 2 + Math.random() * 0.3;
+      const dist = 120 + Math.random() * 220;
+      return {
+        x: Math.cos(ang) * dist, y: Math.sin(ang) * dist,
+        d: 0.05 + Math.random() * 0.25, s: 4 + Math.random() * 7,
+        c: ["#FF8A1F", "#FFC76A", "#FF6B2C", "#FFE3B0"][i % 4],
+      };
+    }), [run]
+  );
+  if (!run) return null;
+  return (
+    <div className="spark-burst" aria-hidden="true">
+      {sparks.map((s, i) => (
+        <span key={i} className="spark" style={{
+          "--tx": s.x + "px", "--ty": s.y + "px",
+          width: s.s, height: s.s, background: s.c, animationDelay: s.d + "s",
+        }} />
+      ))}
+    </div>
+  );
+}
+
+Object.assign(window, { DeepaMark, Lantern, Flame, Icon, SparkBurst });

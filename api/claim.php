@@ -9,10 +9,9 @@ require_post();
 
 $input      = json_decode(file_get_contents('php://input'), true) ?? [];
 $sid        = trim($input['session_id'] ?? '');
-$generosity = $input['generosity'] ?? 'balanced';
+$generosity = get_config()['generosity'] ?? 'balanced';
 
 if (!valid_session_id($sid)) json_err('Invalid session ID.');
-if (!in_array($generosity, ['stingy', 'balanced', 'generous'], true)) $generosity = 'balanced';
 
 $pdo = get_pdo();
 $row = $pdo->prepare("SELECT status, telegram_id, telegram_username, email, amount, tier, tx_hash, send_error FROM claims WHERE session_id = ?");

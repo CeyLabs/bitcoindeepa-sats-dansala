@@ -6,7 +6,6 @@ const API_BASE = "/api";
 const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "accent": "#F7931A",
   "bgMode": "lanterns",
-  "generosity": "balanced",
   "ambient": true,
   "headline": "Sats Dansala",
   "tagline": "Free Vesak sats for the Bitcoin Deepa community. Light a lantern, claim your blessing.",
@@ -24,7 +23,8 @@ let TIERS = {
   generous: [[0.45, 100, 999, "Common"], [0.78, 1000, 3999, "Generous"], [0.95, 4000, 7499, "Lucky"], [1, 7500, 10000, "Jackpot"]],
 };
 let MAX_AMOUNT = 10000;
-fetch(API_BASE + "/config-public.php").then(r => r.json()).then(d => { if (d.tiers) TIERS = d.tiers; if (d.max_amount) MAX_AMOUNT = d.max_amount; }).catch(() => {});
+let ACTIVE_GENEROSITY = "balanced";
+fetch(API_BASE + "/config-public.php").then(r => r.json()).then(d => { if (d.tiers) TIERS = d.tiers; if (d.max_amount) MAX_AMOUNT = d.max_amount; if (d.generosity) ACTIVE_GENEROSITY = d.generosity; }).catch(() => {});
 
 // derive probability % for each tier from the cumulative table
 function tierBars(generosity) {
@@ -69,7 +69,7 @@ function Step({ n, done, locked, verifying, title, desc, actionLabel, icon, onAc
 }
 
 // ── Result receipt ────────────────────────────────────────
-function Receipt({ result, username, generosity, onReset }) {
+function Receipt({ result, username, onReset }) {
   const meta = TIER_META[result.tier];
   return (
     <div className={"receipt-card tier-" + result.tier.toLowerCase()}>
@@ -344,7 +344,7 @@ function ClaimCard({ t }) {
     fetch(API_BASE + "/claim.php", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ session_id: sessionId, generosity: t.generosity }),
+      body: JSON.stringify({ session_id: sessionId }),
     })
       .then(async r => { const d = await r.json(); return { _http: r.status, ...d }; })
       .then(d => {
@@ -408,7 +408,7 @@ function ClaimCard({ t }) {
       </div>
 
       {phase === "done" ? (
-        <Receipt result={result} username={username || email} generosity={t.generosity} onReset={reset} />
+        <Receipt result={result} username={username || email} onReset={reset} />
       ) : phase === "pending" ? (
         <PendingApproval data={pendingData} onReset={reset} />
       ) : telegramState === "blocked" ? (
@@ -521,7 +521,7 @@ function App() {
           <p>Every claim draws a random gift. The odds favour many small blessings — but the brightest lamps shine for a lucky few.</p>
         </div>
         <div className="luck-bars">
-          {tierBars(t.generosity).map((b) => (
+          {tierBars(ACTIVE_GENEROSITY).map((b) => (
             <div className="luck-bar" key={b.tier}>
               <div className="lb-top"><span className="lb-tier" style={{ color: TIER_META[b.tier].color }}>{b.tier}</span><span className="lb-pct">{b.w}%</span></div>
               <div className="lb-track"><div className="lb-fill" style={{ width: b.w + "%", background: TIER_META[b.tier].color }} /></div>
@@ -547,10 +547,6 @@ function App() {
           onChange={(v) => setTweak("bgMode", v)} />
         <TweakToggle label="Floating lanterns" value={t.ambient}
           onChange={(v) => setTweak("ambient", v)} />
-        <TweakSection label="Faucet" />
-        <TweakRadio label="Generosity" value={t.generosity}
-          options={["stingy", "balanced", "generous"]}
-          onChange={(v) => setTweak("generosity", v)} />
         <TweakSection label="Copy" />
         <TweakText label="Headline" value={t.headline} onChange={(v) => setTweak("headline", v)} />
         <TweakText label="Tagline" value={t.tagline} onChange={(v) => setTweak("tagline", v)} />

@@ -225,6 +225,7 @@ function ClaimCard({ t }) {
         if (raw.lumaVerified) setLumaState("verified");
         if (raw.username) setUsername(raw.username);
         if (raw.result) { setResult(raw.result); setPhase("done"); setDisplay(raw.result.amt); }
+        else if (raw.pendingData) { setPendingData(raw.pendingData); setPhase("pending"); }
         return;
       }
     } catch (e) {}
@@ -240,9 +241,10 @@ function ClaimCard({ t }) {
       sessionId, telegramState, email, lumaOpened,
       lumaVerified: s2, username,
       result: phase === "done" ? result : null,
+      pendingData: phase === "pending" ? pendingData : null,
     };
     try { localStorage.setItem(STORE_KEY, JSON.stringify(payload)); } catch (e) {}
-  }, [sessionId, telegramState, email, lumaOpened, s2, username, result, phase]);
+  }, [sessionId, telegramState, email, lumaOpened, s2, username, result, phase, pendingData]);
 
   // ── 5-second ping to check if user started the bot ───────
   const [telegramErr, setTelegramErr] = React.useState("");

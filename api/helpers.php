@@ -104,15 +104,12 @@ function _http_code(array $headers): int {
 // ── Sats roller (mirrors frontend tables so backend is authoritative) ─────────
 
 function roll_sats(string $generosity): array {
-    $tables = [
-        'stingy'   => [[0.78, 100, 999, 'Common'],  [0.95, 1000, 2499, 'Generous'], [0.992, 2500, 5999, 'Lucky'],  [1.0, 6000, 10000, 'Jackpot']],
-        'balanced' => [[0.62, 100, 999, 'Common'],  [0.88, 1000, 2999, 'Generous'], [0.975, 3000, 6999, 'Lucky'],  [1.0, 7000, 10000, 'Jackpot']],
-        'generous' => [[0.45, 100, 999, 'Common'],  [0.78, 1000, 3999, 'Generous'], [0.95,  4000, 7499, 'Lucky'],  [1.0, 7500, 10000, 'Jackpot']],
-    ];
-    $table = $tables[$generosity] ?? $tables['balanced'];
+    $cfg    = get_config();
+    $table  = $cfg['tiers'][$generosity] ?? $cfg['tiers']['balanced'];
+    $cap    = (int) ($cfg['max_amount'] ?? PHP_INT_MAX);
     $r = random_int(0, PHP_INT_MAX) / PHP_INT_MAX;
     foreach ($table as [$thr, $min, $max, $tier]) {
-        if ($r <= $thr) return ['amt' => random_int($min, $max), 'tier' => $tier];
+        if ($r <= $thr) return ['amt' => min(random_int($min, $max), $cap), 'tier' => $tier];
     }
-    return ['amt' => 210, 'tier' => 'Common'];
+    return ['amt' => min(210, $cap), 'tier' => 'Common'];
 }

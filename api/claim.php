@@ -76,11 +76,10 @@ if ($is_retry) {
     }
 }
 
-// Send sats — session_id is the idempotency memo
 $send = bot_post('/api/v1/send', [
     'to'     => $claim['telegram_username'],
     'amount' => $amount,
-    'memo'   => $sid,
+    'memo'   => get_config()['memo'],
 ]);
 
 $tx_hash = $send['transaction_hash'] ?? null;

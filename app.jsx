@@ -17,22 +17,23 @@ const TELEGRAM_URL = "https://t.me/bitcoindeepabot";
 const LUMA_URL = "https://luma.com/bitcoindeepa?period=past";
 const STORE_KEY = "sats-dansala-v1";
 
-// weighted roll — mostly < 1000, rare wins up to 10,000
-function rollSats(generosity) {
-  const tables = {
-    stingy:   [[0.78, 100, 999, "Common"], [0.95, 1000, 2499, "Generous"], [0.992, 2500, 5999, "Lucky"], [1, 6000, 10000, "Jackpot"]],
-    balanced: [[0.62, 100, 999, "Common"], [0.88, 1000, 2999, "Generous"], [0.975, 3000, 6999, "Lucky"], [1, 7000, 10000, "Jackpot"]],
-    generous: [[0.45, 100, 999, "Common"], [0.78, 1000, 3999, "Generous"], [0.95, 4000, 7499, "Lucky"], [1, 7500, 10000, "Jackpot"]],
-  };
-  const table = tables[generosity] || tables.balanced;
-  const r = Math.random();
-  for (const [thr, min, max, tier] of table) {
-    if (r <= thr) {
-      const amt = Math.floor(min + Math.random() * (max - min + 1));
-      return { amt, tier };
-    }
-  }
-  return { amt: 210, tier: "Common" };
+// tiers + max_amount loaded from /api/config-public.php — seeded with fallback
+let TIERS = {
+  stingy:   [[0.78, 100, 999, "Common"], [0.95, 1000, 2499, "Generous"], [0.992, 2500, 5999, "Lucky"], [1, 6000, 10000, "Jackpot"]],
+  balanced: [[0.62, 100, 999, "Common"], [0.88, 1000, 2999, "Generous"], [0.975, 3000, 6999, "Lucky"], [1, 7000, 10000, "Jackpot"]],
+  generous: [[0.45, 100, 999, "Common"], [0.78, 1000, 3999, "Generous"], [0.95, 4000, 7499, "Lucky"], [1, 7500, 10000, "Jackpot"]],
+};
+let MAX_AMOUNT = 10000;
+fetch(API_BASE + "/config-public.php").then(r => r.json()).then(d => { if (d.tiers) TIERS = d.tiers; if (d.max_amount) MAX_AMOUNT = d.max_amount; }).catch(() => {});
+
+// derive probability % for each tier from the cumulative table
+function tierBars(generosity) {
+  const table = TIERS[generosity] || TIERS.balanced;
+  return table.map(([thr, min, max, tier], i) => {
+    const prev = i === 0 ? 0 : table[i - 1][0];
+    const w    = Math.round((thr - prev) * 100);
+    return { tier, range: `${fmt(min)} – ${fmt(max)} sats`, w };
+  });
 }
 
 const TIER_META = {
@@ -336,7 +337,7 @@ function ClaimCard({ t }) {
     let spins = 0;
     const spinTimer = setInterval(() => {
       spins++;
-      setDisplay(Math.floor(100 + Math.random() * 9900));
+      setDisplay(Math.floor(100 + Math.random() * (MAX_AMOUNT - 100)));
       if (spins >= 13) clearInterval(spinTimer);
     }, 55);
 
@@ -520,12 +521,7 @@ function App() {
           <p>Every claim draws a random gift. The odds favour many small blessings — but the brightest lamps shine for a lucky few.</p>
         </div>
         <div className="luck-bars">
-          {[
-            { tier: "Common", range: "100 – 999 sats", w: 62 },
-            { tier: "Generous", range: "1,000 – 2,999 sats", w: 26 },
-            { tier: "Lucky", range: "3,000 – 6,999 sats", w: 9 },
-            { tier: "Jackpot", range: "7,000 – 10,000 sats", w: 3 },
-          ].map((b) => (
+          {tierBars(t.generosity).map((b) => (
             <div className="luck-bar" key={b.tier}>
               <div className="lb-top"><span className="lb-tier" style={{ color: TIER_META[b.tier].color }}>{b.tier}</span><span className="lb-pct">{b.w}%</span></div>
               <div className="lb-track"><div className="lb-fill" style={{ width: b.w + "%", background: TIER_META[b.tier].color }} /></div>

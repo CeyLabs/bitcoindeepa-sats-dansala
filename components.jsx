@@ -3,17 +3,16 @@
 
 // ── Bitcoin Deepa wordmark ────────────────────────────────
 // "Deepa" = lamp/light. The dot of the 'i' is a lit flame.
-function DeepaMark({ size = 26 }) {
+function DeepaMark({ size = 26, ink = false }) {
+  // Real brand wordmark — "bitcoinදීප". `ink` renders a monochrome version
+  // for light surfaces (e.g. the parchment receipt).
   return (
-    <span className="deepa-mark" style={{ fontSize: size }}>
-      <span className="dm-bolt" aria-hidden="true">
-        <svg viewBox="0 0 24 24" width="1em" height="1em" fill="none">
-          <circle cx="12" cy="12" r="11" fill="var(--orange)" />
-          <path d="M13.1 4.5 7 13.2h3.7l-1.1 6.3 6.4-9.1h-3.9z" fill="#0E0E0E" />
-        </svg>
-      </span>
-      <span className="dm-text">Bitcoin&nbsp;Deepa</span>
-    </span>
+    <img
+      className={"deepa-logo" + (ink ? " ink" : "")}
+      src="assets/DeepaLogo_WnO.svg"
+      alt="Bitcoin Deepa"
+      style={{ height: size }}
+    />
   );
 }
 

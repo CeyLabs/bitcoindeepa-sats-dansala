@@ -66,9 +66,12 @@ function ShareButtons({ amt, tier }) {
   const handleShareImage = () => {
     if (busy || typeof html2canvas === 'undefined') return;
     setBusy(true);
+    const shareEl = document.getElementById('share-section');
+    if (shareEl) shareEl.style.display = 'none';
     html2canvas(document.getElementById('share-receipt'), {
       scale: 2, useCORS: true, backgroundColor: '#FBF7EE', logging: false,
     }).then(canvas => canvas.toBlob(blob => {
+      if (shareEl) shareEl.style.display = '';
       const file = new File([blob], 'sats-dansala-receipt.png', { type: 'image/png' });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         navigator.share({ files: [file], title: 'Sats Dansala Receipt', text: text + '\n\n' + url })
@@ -81,11 +84,11 @@ function ShareButtons({ amt, tier }) {
         URL.revokeObjectURL(a.href);
         setBusy(false);
       }
-    }, 'image/png')).catch(() => setBusy(false));
+    }, 'image/png')).catch(() => { if (shareEl) shareEl.style.display = ''; setBusy(false); });
   };
 
   return (
-    <div className="share-row">
+    <div id="share-section" className="share-row">
       <span className="share-label">Share your blessing</span>
       <div className="share-btns">
         <button className="share-btn share-img-btn" onClick={handleShareImage} disabled={busy}>

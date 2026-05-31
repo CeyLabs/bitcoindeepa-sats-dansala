@@ -94,7 +94,7 @@ function Receipt({ result, username, onReset }) {
         <div><span>Status</span><span className="rc-ok">Delivered</span></div>
       </div>
       <div className="rc-foot">
-        <DeepaMark size={18} />
+        <DeepaMark size={16} ink />
         <button className="rc-reset" onClick={onReset}>Claim again ↺</button>
       </div>
     </div>
@@ -402,7 +402,7 @@ function ClaimCard({ t }) {
       <SparkBurst run={phase === "done"} />
       <div className="cc-glow" />
       <div className="cc-header">
-        <Flame size={42} lit />
+        <img className="cc-coin" src="assets/btc-animated.webp" alt="" width={44} height={44} aria-hidden="true" />
         <div>
           <div className="cc-title">Sats Dansala Faucet</div>
           <div className="cc-sub">Three steps to your free sats</div>
@@ -486,7 +486,7 @@ function App() {
       )}
 
       <header className="nav">
-        <DeepaMark size={24} />
+        <DeepaMark size={46} />
         <div className="nav-right">
           <span className="nav-event">{t.eventLabel}</span>
           <a className="nav-link" href={LUMA_URL} target="_blank" rel="noopener">Events <Icon name="external" size={14} /></a>
@@ -495,7 +495,12 @@ function App() {
 
       <main className="hero">
         <div className="hero-copy">
-          <div className="kicker"><span className="kicker-dot" /> Pearl of Satoshi · Bitcoin Deepa · Sri Lanka</div>
+          <div className="kicker">
+            <svg className="kicker-ic" viewBox="0 0 512 512" width="14" height="14" aria-hidden="true">
+              <path fill="currentColor" d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zm50.7-186.9L162.4 380.6c-19.4 7.5-38.5-11.6-31-31l55.5-144.3c3.3-8.5 9.9-15.1 18.4-18.4l144.3-55.5c19.4-7.5 38.5 11.6 31 31L325.1 306.7c-3.2 8.5-9.9 15.1-18.4 18.4zM288 256a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z" />
+            </svg>
+            Pearl of Satoshi · Bitcoin Deepa · Sri Lanka
+          </div>
           <h1 className="display">{t.headline}</h1>
           <p className="lede">{t.tagline}</p>
           <ul className="hero-points">
@@ -534,7 +539,7 @@ function App() {
       </section>
 
       <footer className="foot">
-        <DeepaMark size={20} />
+        <DeepaMark size={40} />
         <span className="foot-tag">A Vesak dansala of sats · Stay humble, stack sats, share the light.</span>
       </footer>
 

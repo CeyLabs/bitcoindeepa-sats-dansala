@@ -106,7 +106,7 @@ function ShareButtons({ amt, tier }) {
           <Icon name="whatsapp" size={13} /><span>WhatsApp</span>
         </a>
         <a className="share-btn" href={`https://t.me/share/url?url=${enc(url)}&text=${enc(text)}`} target="_blank" rel="noopener">
-          <Icon name="telegram" size={13} /><span>Telegram</span>
+          <Icon name="telegram-brand" size={13} /><span>Telegram</span>
         </a>
         <a className="share-btn" href={`https://www.facebook.com/sharer/sharer.php?u=${enc(url)}&quote=${enc(text)}`} target="_blank" rel="noopener">
           <Icon name="facebook" size={13} /><span>Facebook</span>

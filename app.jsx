@@ -62,55 +62,47 @@ function ShareButtons({ amt, tier }) {
   const url  = window.location.origin + window.location.pathname;
   const text = buildShareText(amt, tier);
   const enc  = encodeURIComponent;
-  const [imgBusy, setImgBusy] = React.useState(false);
+  const [busy, setBusy] = React.useState(null);
 
-  const handleShareImage = () => {
-    if (imgBusy || typeof html2canvas === 'undefined') return;
-    setImgBusy(true);
-    const el = document.getElementById('share-receipt');
-    html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#FBF7EE', logging: false })
-      .then(canvas => canvas.toBlob(blob => {
-        const file = new File([blob], 'sats-dansala-receipt.png', { type: 'image/png' });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          navigator.share({ files: [file], title: 'Sats Dansala Receipt', text }).catch(() => {});
-        } else {
-          const a = document.createElement('a');
-          a.href = URL.createObjectURL(blob);
-          a.download = 'sats-dansala-receipt.png';
-          a.click();
-          URL.revokeObjectURL(a.href);
-        }
-        setImgBusy(false);
-      }, 'image/png'))
-      .catch(() => setImgBusy(false));
+  const shareVia = (id, fallbackUrl) => {
+    if (busy || typeof html2canvas === 'undefined') return;
+    setBusy(id);
+    html2canvas(document.getElementById('share-receipt'), {
+      scale: 2, useCORS: true, backgroundColor: '#FBF7EE', logging: false,
+    }).then(canvas => canvas.toBlob(blob => {
+      const file = new File([blob], 'sats-dansala-receipt.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: 'Sats Dansala Receipt', text })
+          .catch(() => {}).finally(() => setBusy(null));
+      } else {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'sats-dansala-receipt.png';
+        a.click();
+        URL.revokeObjectURL(a.href);
+        window.open(fallbackUrl, '_blank', 'noopener');
+        setBusy(null);
+      }
+    }, 'image/png')).catch(() => setBusy(null));
   };
 
-  const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+  const platforms = [
+    { id: 'twitter',  icon: 'twitter',       label: 'Post',      url: `https://twitter.com/intent/tweet?text=${enc(text + '\n' + url)}` },
+    { id: 'whatsapp', icon: 'whatsapp',       label: 'WhatsApp',  url: `https://wa.me/?text=${enc(text + '\n' + url)}` },
+    { id: 'telegram', icon: 'telegram-brand', label: 'Telegram',  url: `https://t.me/share/url?url=${enc(url)}&text=${enc(text)}` },
+    { id: 'facebook', icon: 'facebook',       label: 'Facebook',  url: `https://www.facebook.com/sharer/sharer.php?u=${enc(url)}&quote=${enc(text)}` },
+  ];
 
   return (
     <div className="share-row">
       <span className="share-label">Share your blessing</span>
       <div className="share-btns">
-        <button className="share-btn share-img-btn" onClick={handleShareImage} disabled={imgBusy}>
-          <Icon name="share" size={14} /><span>{imgBusy ? 'Capturing…' : 'Share Receipt Image'}</span>
-        </button>
-        {canShare && (
-          <button className="share-btn" onClick={() => navigator.share({ title: 'Sats Dansala', text, url }).catch(() => {})}>
-            <Icon name="share" size={13} /><span>Share text</span>
+        {platforms.map(({ id, icon, label, url: pUrl }) => (
+          <button key={id} className="share-btn" disabled={!!busy} onClick={() => shareVia(id, pUrl)}>
+            <Icon name={icon} size={13} />
+            <span>{busy === id ? '…' : label}</span>
           </button>
-        )}
-        <a className="share-btn" href={`https://twitter.com/intent/tweet?text=${enc(text + '\n' + url)}`} target="_blank" rel="noopener">
-          <Icon name="twitter" size={13} /><span>Post</span>
-        </a>
-        <a className="share-btn" href={`https://wa.me/?text=${enc(text + '\n' + url)}`} target="_blank" rel="noopener">
-          <Icon name="whatsapp" size={13} /><span>WhatsApp</span>
-        </a>
-        <a className="share-btn" href={`https://t.me/share/url?url=${enc(url)}&text=${enc(text)}`} target="_blank" rel="noopener">
-          <Icon name="telegram-brand" size={13} /><span>Telegram</span>
-        </a>
-        <a className="share-btn" href={`https://www.facebook.com/sharer/sharer.php?u=${enc(url)}&quote=${enc(text)}`} target="_blank" rel="noopener">
-          <Icon name="facebook" size={13} /><span>Facebook</span>
-        </a>
+        ))}
       </div>
     </div>
   );

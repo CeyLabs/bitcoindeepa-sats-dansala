@@ -52,6 +52,11 @@ if ($is_retry) {
         if ($dup->fetch()) json_err('This Telegram account has already claimed sats from this faucet.', 409);
     }
 
+    // Budget cap — stop new claims once total distributed exceeds limit
+    $budget = (int) (get_config()['budget_sats'] ?? PHP_INT_MAX);
+    $spent  = $pdo->query("SELECT COALESCE(SUM(amount),0) FROM claims WHERE status IN ('claimed','sent','pending_approval')")->fetchColumn();
+    if ((int) $spent >= $budget) json_err('The Daane faucet has reached its limit for this event. Thank you for participating!', 503);
+
     // Roll amount server-side
     $result = roll_sats($generosity);
     $amount = $result['amt'];

@@ -34,6 +34,7 @@ return [
     // max_amount must match (or be ≤) the bot's max_amount in config.yaml
     'max_amount'  => 100,
     'generosity'  => 'balanced',  // stingy | balanced | generous
+    'budget_sats' => 250000,      // faucet stops accepting new claims above this total
 
     // Each tier: [cumulative_probability, min_sats, max_sats, label]
     // Probabilities must be ascending and the last entry must be exactly 1.0

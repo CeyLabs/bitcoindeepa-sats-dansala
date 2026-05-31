@@ -9,26 +9,29 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "ambient": true,
   "headline": "Sats Dansala",
   "tagline": "Free Vesak sats for the Bitcoin Deepa community. Light a lantern, claim your blessing.",
-  "eventLabel": "Vesak 2026 · Free Sats Faucet"
+  "eventLabel": "Vesak 2026 · Free Sats Faucet",
+  "luckTitle": "How the lantern is lit",
+  "luckDesc": "Every claim draws a random gift. The odds favour many small blessings — but the brightest lamps shine for a lucky few."
 }/*EDITMODE-END*/;
 
 const TELEGRAM_URL = "https://t.me/bitcoindeepabot";
 const LUMA_URL = "https://luma.com/bitcoindeepa?period=past";
 const STORE_KEY = "sats-dansala-v1";
 
-// tiers + max_amount + generosity loaded from /api/config-public.php — seeded with fallback
-let TIERS = {
-  stingy:   [[0.78, 100, 999, "Common"], [0.95, 1000, 2499, "Generous"], [0.992, 2500, 5999, "Lucky"], [1, 6000, 10000, "Jackpot"]],
-  balanced: [[0.62, 100, 999, "Common"], [0.88, 1000, 2999, "Generous"], [0.975, 3000, 6999, "Lucky"], [1, 7000, 10000, "Jackpot"]],
-  generous: [[0.45, 100, 999, "Common"], [0.78, 1000, 3999, "Generous"], [0.95, 4000, 7499, "Lucky"], [1, 7500, 10000, "Jackpot"]],
+const CONFIG_DEFAULTS = {
+  tiers: {
+    stingy:   [[0.78, 100, 999, "Common"], [0.95, 1000, 2499, "Generous"], [0.992, 2500, 5999, "Lucky"], [1, 6000, 10000, "Jackpot"]],
+    balanced: [[0.62, 100, 999, "Common"], [0.88, 1000, 2999, "Generous"], [0.975, 3000, 6999, "Lucky"], [1, 7000, 10000, "Jackpot"]],
+    generous: [[0.45, 100, 999, "Common"], [0.78, 1000, 3999, "Generous"], [0.95, 4000, 7499, "Lucky"], [1, 7500, 10000, "Jackpot"]],
+  },
+  maxAmount: 10000,
+  generosity: "balanced",
 };
-let MAX_AMOUNT = 10000;
-let ACTIVE_GENEROSITY = "balanced";
-fetch(API_BASE + "/config-public.php").then(r => r.json()).then(d => { if (d.tiers) TIERS = d.tiers; if (d.max_amount) MAX_AMOUNT = d.max_amount; if (d.generosity) ACTIVE_GENEROSITY = d.generosity; }).catch(() => {});
+const CONFIG_CACHE_KEY = "sats-dansala-config-v1";
 
 // derive probability % for each tier from the cumulative table
-function tierBars(generosity) {
-  const table = TIERS[generosity] || TIERS.balanced;
+function tierBars(tiers, generosity) {
+  const table = tiers[generosity] || tiers.balanced;
   return table.map(([thr, min, max, tier], i) => {
     const prev = i === 0 ? 0 : table[i - 1][0];
     const w    = Math.round((thr - prev) * 100);
@@ -196,7 +199,7 @@ function LumaStep({ locked, opened, onOpen, email, setEmail, state, err, onVerif
 }
 
 // ── Claim card (centerpiece) ──────────────────────────────
-function ClaimCard({ t }) {
+function ClaimCard({ t, maxAmount }) {
   const [sessionId, setSessionId] = React.useState(null);
   // telegramState: idle | opened | verified
   const [telegramState, setTelegramState] = React.useState("idle");
@@ -339,7 +342,7 @@ function ClaimCard({ t }) {
     let spins = 0;
     const spinTimer = setInterval(() => {
       spins++;
-      setDisplay(Math.floor(100 + Math.random() * (MAX_AMOUNT - 100)));
+      setDisplay(Math.floor(100 + Math.random() * (maxAmount - 100)));
       if (spins >= 13) clearInterval(spinTimer);
     }, 55);
 
@@ -465,6 +468,25 @@ function ClaimCard({ t }) {
 // ── App ───────────────────────────────────────────────────
 function App() {
   const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const [cfg, setCfg] = React.useState(() => {
+    try { const c = JSON.parse(localStorage.getItem(CONFIG_CACHE_KEY)); if (c) return c; } catch (e) {}
+    return CONFIG_DEFAULTS;
+  });
+
+  React.useEffect(() => {
+    fetch(API_BASE + "/config-public.php")
+      .then(r => r.json())
+      .then(d => {
+        const next = {
+          tiers: d.tiers || CONFIG_DEFAULTS.tiers,
+          maxAmount: d.max_amount || CONFIG_DEFAULTS.maxAmount,
+          generosity: d.generosity || CONFIG_DEFAULTS.generosity,
+        };
+        setCfg(next);
+        try { localStorage.setItem(CONFIG_CACHE_KEY, JSON.stringify(next)); } catch (e) {}
+      })
+      .catch(() => {});
+  }, []);
 
   React.useEffect(() => {
     document.documentElement.style.setProperty("--orange", t.accent);
@@ -518,17 +540,17 @@ function App() {
         </div>
 
         <div className="hero-claim">
-          <ClaimCard t={t} />
+          <ClaimCard t={t} maxAmount={cfg.maxAmount} />
         </div>
       </main>
 
       <section className="luck">
         <div className="luck-head">
-          <h2>How the lantern is lit</h2>
-          <p>Every claim draws a random gift. The odds favour many small blessings — but the brightest lamps shine for a lucky few.</p>
+          <h2>{t.luckTitle}</h2>
+          <p>{t.luckDesc}</p>
         </div>
         <div className="luck-bars">
-          {tierBars(ACTIVE_GENEROSITY).map((b) => (
+          {tierBars(cfg.tiers, cfg.generosity).map((b) => (
             <div className="luck-bar" key={b.tier}>
               <div className="lb-top"><span className="lb-tier" style={{ color: TIER_META[b.tier].color }}>{b.tier}</span><span className="lb-pct">{b.w}%</span></div>
               <div className="lb-track"><div className="lb-fill" style={{ width: b.w + "%", background: TIER_META[b.tier].color }} /></div>
@@ -558,6 +580,8 @@ function App() {
         <TweakText label="Headline" value={t.headline} onChange={(v) => setTweak("headline", v)} />
         <TweakText label="Tagline" value={t.tagline} onChange={(v) => setTweak("tagline", v)} />
         <TweakText label="Event label" value={t.eventLabel} onChange={(v) => setTweak("eventLabel", v)} />
+        <TweakText label="Luck title" value={t.luckTitle} onChange={(v) => setTweak("luckTitle", v)} />
+        <TweakText label="Luck desc" value={t.luckDesc} onChange={(v) => setTweak("luckDesc", v)} />
       </TweaksPanel>
     </div>
   );

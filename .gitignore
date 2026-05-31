@@ -4,3 +4,7 @@ api/config.php
 # Logs
 *.log
 api/logs/
+
+# Build output
+dist/
+node_modules/

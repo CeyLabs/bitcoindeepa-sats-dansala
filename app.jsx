@@ -34,7 +34,7 @@ function tierBars(tiers, generosity) {
   const table = tiers[generosity] || tiers.balanced;
   return table.map(([thr, min, max, tier], i) => {
     const prev = i === 0 ? 0 : table[i - 1][0];
-    const w    = Math.round((thr - prev) * 100);
+    const w    = +((thr - prev) * 100).toFixed(1);
     return { tier, range: `${fmt(min)} – ${fmt(max)} sats`, w };
   });
 }
@@ -552,7 +552,7 @@ function App() {
         <div className="luck-bars">
           {tierBars(cfg.tiers, cfg.generosity).map((b) => (
             <div className="luck-bar" key={b.tier}>
-              <div className="lb-top"><span className="lb-tier" style={{ color: TIER_META[b.tier].color }}>{b.tier}</span><span className="lb-pct">{b.w}%</span></div>
+              <div className="lb-top"><span className="lb-tier" style={{ color: TIER_META[b.tier].color }}>{b.tier}</span><span className="lb-pct">{b.w.toFixed(1)}%</span></div>
               <div className="lb-track"><div className="lb-fill" style={{ width: b.w + "%", background: TIER_META[b.tier].color }} /></div>
               <div className="lb-range">{b.range}</div>
             </div>

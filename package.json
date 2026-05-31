@@ -1,0 +1,12 @@
+{
+  "name": "sats-dansala",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "esbuild tweaks-panel.jsx components.jsx app.jsx --jsx=transform --outdir=dist",
+    "watch": "esbuild tweaks-panel.jsx components.jsx app.jsx --jsx=transform --outdir=dist --watch"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}

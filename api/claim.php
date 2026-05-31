@@ -78,7 +78,7 @@ if ($is_retry) {
 $send = bot_post('/api/v1/send', [
     'to'     => $claim['telegram_username'],
     'amount' => $amount,
-    'memo'   => get_config()['memo'],
+    'memo'   => get_config()['memo'] . ' [' . $sid . ']',
 ]);
 
 $tx_hash = $send['transaction_hash'] ?? null;

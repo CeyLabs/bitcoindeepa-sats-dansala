@@ -72,20 +72,20 @@ function ShareButtons({ amt, tier }) {
       <div className="share-btns">
         {canShare && (
           <button className="share-btn" onClick={handleNative} title="Share">
-            <Icon name="share" size={15} />
+            <Icon name="share" size={13} /><span>Share</span>
           </button>
         )}
-        <a className="share-btn" href={`https://twitter.com/intent/tweet?text=${enc(text + '\n' + url)}`} target="_blank" rel="noopener" title="Share on X">
-          <Icon name="twitter" size={15} />
+        <a className="share-btn" href={`https://twitter.com/intent/tweet?text=${enc(text + '\n' + url)}`} target="_blank" rel="noopener">
+          <Icon name="twitter" size={13} /><span>Post</span>
         </a>
-        <a className="share-btn" href={`https://wa.me/?text=${enc(text + '\n' + url)}`} target="_blank" rel="noopener" title="Share on WhatsApp">
-          <Icon name="whatsapp" size={15} />
+        <a className="share-btn" href={`https://wa.me/?text=${enc(text + '\n' + url)}`} target="_blank" rel="noopener">
+          <Icon name="whatsapp" size={13} /><span>WhatsApp</span>
         </a>
-        <a className="share-btn" href={`https://t.me/share/url?url=${enc(url)}&text=${enc(text)}`} target="_blank" rel="noopener" title="Share on Telegram">
-          <Icon name="telegram" size={15} />
+        <a className="share-btn" href={`https://t.me/share/url?url=${enc(url)}&text=${enc(text)}`} target="_blank" rel="noopener">
+          <Icon name="telegram" size={13} /><span>Telegram</span>
         </a>
-        <a className="share-btn" href={`https://www.facebook.com/sharer/sharer.php?u=${enc(url)}&quote=${enc(text)}`} target="_blank" rel="noopener" title="Share on Facebook">
-          <Icon name="facebook" size={15} />
+        <a className="share-btn" href={`https://www.facebook.com/sharer/sharer.php?u=${enc(url)}&quote=${enc(text)}`} target="_blank" rel="noopener">
+          <Icon name="facebook" size={13} /><span>Facebook</span>
         </a>
       </div>
     </div>

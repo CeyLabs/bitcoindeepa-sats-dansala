@@ -50,7 +50,12 @@ if (empty($data['users'])) {
 // user found — check if this telegram_id has already claimed before saving
 $user        = $data['users'][0];
 $telegram_id = (int) ($user['telegram_id'] ?? 0);
-$username    = $user['username'] ?? '';
+$username    = trim($user['username'] ?? '');
+if (empty($username)) {
+    $first    = trim($user['first_name'] ?? '');
+    $last     = trim($user['last_name']  ?? '');
+    $username = trim("$first $last");
+}
 
 $already = $pdo->prepare(
     "SELECT id FROM claims WHERE telegram_id = ? AND status IN ('claimed','sent') LIMIT 1"

@@ -39,7 +39,9 @@ if ($is_retry) {
 } else {
     // Fresh claim — must be luma_verified
     if ($claim['status'] !== 'luma_verified') json_err('Complete all steps before claiming.');
-    if (empty($claim['telegram_username']))    json_err('No Telegram username on record — cannot send sats.');
+    $tg_handle = $claim['telegram_username'] ?? '';
+    if (!preg_match('/^[a-zA-Z0-9_]{5,32}$/', $tg_handle))
+        json_err('Your Telegram account has no @username set. Please add one in Telegram Settings → Edit Profile, then try again.');
 
     // One claim per Telegram user
     if (!empty($claim['telegram_id'])) {

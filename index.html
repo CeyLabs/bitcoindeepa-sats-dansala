@@ -152,7 +152,7 @@
   /* ── claim card ─────────────────────────────────────── */
   .hero-claim{ display:flex; justify-content:flex-end; }
   .claim-card{ position:relative; width:100%; max-width:470px; background:linear-gradient(160deg, #16131c 0%, #0c0a11 52%, #08070b 100%);
-    border:1px solid transparent; border-radius:24px; padding:26px 26px 24px;
+    border:1px solid transparent; border-radius:24px; padding:26px 26px 24px; overflow:hidden;
     box-shadow:0 40px 90px -30px rgba(0,0,0,0.85), inset 0 1px 0 rgba(255,255,255,0.05); }
   /* gradient border — bright light catches the top-left, fades to near-nothing (matches the dark-glass reference) */
   .claim-card::before{ content:""; position:absolute; inset:0; border-radius:inherit; padding:1.5px; pointer-events:none; z-index:4;
@@ -302,6 +302,7 @@
   .rc-rows > div{ display:flex; justify-content:space-between; font-size:12px; color:#3a342c; }
   .rc-ok{ color:#1F8A3B; font-weight:600; }
   .rc-foot{ display:flex; align-items:center; justify-content:space-between; margin-top:18px; padding-top:14px; border-top:1.5px dashed #b6ab97; }
+  .rc-foot .deepa-logo{ max-width:130px; width:auto !important; }
   .rc-foot .deepa-mark{ color:#1a1714; font-size:15px; }
   .rc-foot .dm-text{ color:#1a1714; }
   .rc-reset{ font-family:"Exo 2",sans-serif; font-size:11.5px; font-weight:600; color:#857a6b; background:none; border:none; cursor:pointer; }

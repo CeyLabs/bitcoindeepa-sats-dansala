@@ -6,12 +6,22 @@
 function DeepaMark({ size = 26, ink = false }) {
   // Real brand wordmark — "bitcoinදීප". `ink` renders a monochrome version
   // for light surfaces (e.g. the parchment receipt).
+  // Two html2canvas (shareable receipt) quirks handled here:
+  //  1. It ignores CSS filters, so the light surfaces use the black brand
+  //     edition (BnO) directly instead of filter:brightness(0) on the
+  //     white logo — which left the wordmark invisible on the parchment.
+  //  2. For an SVG <img> sized only via CSS, html2canvas draws it at its
+  //     natural size and clips — cropping the wordmark to "bit". Pinning
+  //     explicit width+height attributes makes it scale correctly.
+  const width = Math.round(size * (539.2 / 196.77)); // brand SVG viewBox ratio
   return (
     <img
       className={"deepa-logo" + (ink ? " ink" : "")}
-      src="assets/DeepaLogo_WnO.svg"
+      src={ink ? "assets/DeepaLogo_BnO.svg" : "assets/DeepaLogo_WnO.svg"}
       alt="Bitcoin Deepa"
-      style={{ height: size }}
+      width={width}
+      height={size}
+      style={{ width, height: size }}
     />
   );
 }

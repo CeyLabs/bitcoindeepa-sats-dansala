@@ -63,15 +63,50 @@ function ShareButtons({ amt, tier }) {
   const text = buildShareText(amt, tier);
   const [busy, setBusy] = React.useState(false);
 
+  // Paint the captured card centered on a 1:1 square with the dark page
+  // backdrop, so the shared image is a tidy square (great for social posts).
+  const composeSquare = (cardCanvas) => {
+    const pad = Math.round(cardCanvas.width * 0.13);
+    const side = Math.max(cardCanvas.width, cardCanvas.height) + pad * 2;
+    const sq = document.createElement('canvas');
+    sq.width = side; sq.height = side;
+    const ctx = sq.getContext('2d');
+    const base = ctx.createLinearGradient(0, 0, 0, side);
+    base.addColorStop(0, '#100C12'); base.addColorStop(.55, '#0B0A0C'); base.addColorStop(1, '#0E0A10');
+    ctx.fillStyle = base; ctx.fillRect(0, 0, side, side);
+    // subtle warm glow toward the top
+    const glow = ctx.createRadialGradient(side * 0.66, side * 0.1, 0, side * 0.66, side * 0.1, side * 0.62);
+    glow.addColorStop(0, 'rgba(255,138,31,0.10)'); glow.addColorStop(.7, 'rgba(255,138,31,0)');
+    ctx.fillStyle = glow; ctx.fillRect(0, 0, side, side);
+    // soft drop shadow painted here (the card's own shadow is dropped during capture)
+    const dx = Math.round((side - cardCanvas.width) / 2);
+    const dy = Math.round((side - cardCanvas.height) / 2);
+    ctx.save();
+    ctx.shadowColor = 'rgba(0,0,0,0.5)';
+    ctx.shadowBlur = Math.round(pad * 0.7);
+    ctx.shadowOffsetY = Math.round(pad * 0.22);
+    ctx.drawImage(cardCanvas, dx, dy);
+    ctx.restore();
+    return sq;
+  };
+
   const handleShareImage = () => {
     if (busy || typeof html2canvas === 'undefined') return;
     setBusy(true);
-    const shareEl = document.getElementById('share-section');
-    if (shareEl) shareEl.style.display = 'none';
-    html2canvas(document.getElementById('share-receipt'), {
-      scale: 2, useCORS: true, backgroundColor: '#FBF7EE', logging: false,
-    }).then(canvas => canvas.toBlob(blob => {
-      if (shareEl) shareEl.style.display = '';
+    // Capture the whole dark faucet card; hide interactive-only bits (share
+    // controls + "Claim again") so they don't appear in the shared image.
+    const card = document.getElementById('share-card');
+    const hidden = [...card.querySelectorAll('[data-hide-in-capture]')];
+    const restore = () => {
+      hidden.forEach(el => { el.style.display = ''; });
+      card.classList.remove('capturing');
+    };
+    hidden.forEach(el => { el.style.display = 'none'; });
+    card.classList.add('capturing');
+    html2canvas(card, {
+      scale: 2, useCORS: true, backgroundColor: null, logging: false,
+    }).then(cardCanvas => composeSquare(cardCanvas).toBlob(blob => {
+      restore();
       const file = new File([blob], 'sats-dansala-receipt.png', { type: 'image/png' });
       if (navigator.canShare && navigator.canShare({ files: [file] })) {
         navigator.share({ files: [file], title: 'Sats Dansala Receipt', text: text + '\n\n' + url })
@@ -84,11 +119,11 @@ function ShareButtons({ amt, tier }) {
         URL.revokeObjectURL(a.href);
         setBusy(false);
       }
-    }, 'image/png')).catch(() => { if (shareEl) shareEl.style.display = ''; setBusy(false); });
+    }, 'image/png')).catch(() => { restore(); setBusy(false); });
   };
 
   return (
-    <div id="share-section" className="share-row">
+    <div id="share-section" className="share-row" data-hide-in-capture>
       <span className="share-label">Share your blessing</span>
       <div className="share-btns">
         <button className="share-btn share-img-btn" onClick={handleShareImage} disabled={busy}>
@@ -145,8 +180,9 @@ function Receipt({ result, username, onReset }) {
       </div>
       <ShareButtons amt={result.amt} tier={result.tier} />
       <div className="rc-foot">
-        <DeepaMark size={16} ink />
-        <button className="rc-reset" onClick={onReset}>Claim again ↺</button>
+        <DeepaMark size={22} ink />
+        <button className="rc-reset" data-hide-in-capture onClick={onReset}>Claim again ↺</button>
+        <span className="rc-domain">sats.day</span>
       </div>
     </div>
   );
@@ -452,7 +488,7 @@ function ClaimCard({ t, maxAmount }) {
   };
 
   return (
-    <div className="claim-card">
+    <div className="claim-card" id="share-card">
       <SparkBurst run={phase === "done"} />
       <div className="cc-glow" />
       <div className="cc-header">

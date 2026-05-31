@@ -61,7 +61,6 @@ function buildShareText(amt, tier) {
 function ShareButtons({ amt, tier }) {
   const url  = window.location.origin + window.location.pathname;
   const text = buildShareText(amt, tier);
-  const enc  = encodeURIComponent;
   const [busy, setBusy] = React.useState(false);
 
   const handleShareImage = () => {
@@ -92,18 +91,6 @@ function ShareButtons({ amt, tier }) {
         <button className="share-btn share-img-btn" onClick={handleShareImage} disabled={busy}>
           <Icon name="share" size={13} /><span>{busy ? 'Capturing…' : 'Share'}</span>
         </button>
-        <a className="share-btn" href={`https://twitter.com/intent/tweet?text=${enc(text + '\n' + url)}`} target="_blank" rel="noopener">
-          <Icon name="twitter" size={13} /><span>Post</span>
-        </a>
-        <a className="share-btn" href={`https://wa.me/?text=${enc(text + '\n' + url)}`} target="_blank" rel="noopener">
-          <Icon name="whatsapp" size={13} /><span>WhatsApp</span>
-        </a>
-        <a className="share-btn" href={`https://t.me/share/url?url=${enc(url)}&text=${enc(text)}`} target="_blank" rel="noopener">
-          <Icon name="telegram-brand" size={13} /><span>Telegram</span>
-        </a>
-        <a className="share-btn" href={`https://www.facebook.com/sharer/sharer.php?u=${enc(url)}&quote=${enc(text)}`} target="_blank" rel="noopener">
-          <Icon name="facebook" size={13} /><span>Facebook</span>
-        </a>
       </div>
     </div>
   );

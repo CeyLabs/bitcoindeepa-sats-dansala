@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS claims (
   id                   INT UNSIGNED    AUTO_INCREMENT PRIMARY KEY,
   session_id           VARCHAR(32)     NOT NULL UNIQUE COMMENT 'satsdan_<12hex>',
   ip                   VARCHAR(45)     NOT NULL DEFAULT '',
+  user_agent           VARCHAR(512)    DEFAULT NULL,
   telegram_id          BIGINT          DEFAULT NULL,
   telegram_username    VARCHAR(64)     DEFAULT NULL,
   email                VARCHAR(255)    DEFAULT NULL,

@@ -8,6 +8,7 @@ cors_headers();
 require_post();
 
 $ip  = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+$ua  = substr($_SERVER['HTTP_USER_AGENT'] ?? '', 0, 512);
 $cfg = get_config();
 $pdo = get_pdo();
 
@@ -27,7 +28,7 @@ do {
     $chk->execute([$sid]);
 } while ($chk->rowCount() > 0);
 
-$pdo->prepare("INSERT INTO claims (session_id, ip, created_at) VALUES (?, ?, NOW())")
-    ->execute([$sid, $ip]);
+$pdo->prepare("INSERT INTO claims (session_id, ip, user_agent, created_at) VALUES (?, ?, ?, NOW())")
+    ->execute([$sid, $ip, $ua]);
 
 json_out(['session_id' => $sid]);

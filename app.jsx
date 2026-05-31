@@ -87,10 +87,10 @@ function ShareButtons({ amt, tier }) {
   };
 
   const platforms = [
-    { id: 'twitter',  icon: 'twitter',       label: 'Post',      url: `https://twitter.com/intent/tweet?text=${enc(text + '\n' + url)}` },
-    { id: 'whatsapp', icon: 'whatsapp',       label: 'WhatsApp',  url: `https://wa.me/?text=${enc(text + '\n' + url)}` },
-    { id: 'telegram', icon: 'telegram-brand', label: 'Telegram',  url: `https://t.me/share/url?url=${enc(url)}&text=${enc(text)}` },
-    { id: 'facebook', icon: 'facebook',       label: 'Facebook',  url: `https://www.facebook.com/sharer/sharer.php?u=${enc(url)}&quote=${enc(text)}` },
+    { id: 'twitter',  icon: 'twitter',       label: 'Post',      url: `https://twitter.com/intent/tweet?text=${enc(text)}` },
+    { id: 'whatsapp', icon: 'whatsapp',       label: 'WhatsApp',  url: `https://wa.me/?text=${enc(text)}` },
+    { id: 'telegram', icon: 'telegram-brand', label: 'Telegram',  url: `https://t.me/share/url?text=${enc(text)}` },
+    { id: 'facebook', icon: 'facebook',       label: 'Facebook',  url: `https://www.facebook.com/sharer/sharer.php?quote=${enc(text)}` },
   ];
 
   return (

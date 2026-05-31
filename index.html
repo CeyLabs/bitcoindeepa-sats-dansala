@@ -110,7 +110,7 @@
   /* ── nav ────────────────────────────────────────────── */
   .nav{ position:relative; z-index:3; display:flex; align-items:center; justify-content:space-between; padding:26px 0 22px; }
   .deepa-logo{ display:block; width:auto; user-select:none; -webkit-user-drag:none; }
-  .deepa-logo.ink{ filter:brightness(0); opacity:.82; }
+  .deepa-logo.ink{ opacity:.82; } /* uses the black brand edition (DeepaLogo_BnO.svg) — no CSS filter, which html2canvas can't render */
   /* optically center the wordmark with the nav link — the දීප descender skews the box */
   .nav .deepa-logo{ transform:translateY(5px); }
   .nav-right{ display:flex; align-items:center; gap:18px; }
@@ -163,6 +163,14 @@
   /* corner glint — a single point of light on the top-left edge */
   .claim-card::after{ content:""; position:absolute; top:-13px; left:-13px; width:36px; height:36px; z-index:5; pointer-events:none;
     background:radial-gradient(ellipse at center, #fff, rgba(255,236,205,.4), rgba(255,255,255,.1), transparent 70%); filter:blur(1px); }
+  /* capture mode: html2canvas renders the big box-shadow as hard dark blocks — drop it (a clean soft shadow is painted into the exported square instead) */
+  .claim-card.capturing{ box-shadow:none !important; }
+  /* the gradient border (::before) uses mask-composite, which html2canvas can't do — it
+     leaks the bright gradient as a wash over the header/icon, so drop both pseudo-elements
+     during capture and add a flat hairline border instead */
+  .claim-card.capturing{ border-color:rgba(255,255,255,0.10) !important; }
+  .claim-card.capturing::before,
+  .claim-card.capturing::after{ display:none !important; }
   .cc-glow{ position:absolute; top:-90px; left:50%; transform:translateX(-50%); width:340px; height:200px;
     background:radial-gradient(ellipse, rgba(255,138,31,.30), transparent 70%); pointer-events:none; }
   .cc-header{ display:flex; align-items:center; gap:14px; position:relative; }
@@ -307,6 +315,9 @@
   .rc-foot .dm-text{ color:#1a1714; }
   .rc-reset{ font-family:"Exo 2",sans-serif; font-size:11.5px; font-weight:600; color:#857a6b; background:none; border:none; cursor:pointer; }
   .rc-reset:hover{ color:var(--orange-deep); }
+  /* domain stamp — only shown in the captured share image (replaces the hidden "Claim again") */
+  .rc-domain{ display:none; font-family:var(--mono); font-size:12px; font-weight:600; letter-spacing:.02em; color:#857a6b; }
+  .claim-card.capturing .rc-domain{ display:inline; }
   .tier-jackpot .rc-num{ background:linear-gradient(120deg,var(--ember),var(--orange)); -webkit-background-clip:text; background-clip:text; color:transparent; }
   .share-row{ margin-top:14px; padding-top:14px; border-top:1.5px dashed #b6ab97; }
   .share-label{ font-family:"Exo 2",sans-serif; font-size:10.5px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:#857a6b; display:block; margin-bottom:8px; }

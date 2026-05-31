@@ -62,17 +62,41 @@ function ShareButtons({ amt, tier }) {
   const url  = window.location.origin + window.location.pathname;
   const text = buildShareText(amt, tier);
   const enc  = encodeURIComponent;
+  const [imgBusy, setImgBusy] = React.useState(false);
+
+  const handleShareImage = () => {
+    if (imgBusy || typeof html2canvas === 'undefined') return;
+    setImgBusy(true);
+    const el = document.getElementById('share-receipt');
+    html2canvas(el, { scale: 2, useCORS: true, backgroundColor: '#FBF7EE', logging: false })
+      .then(canvas => canvas.toBlob(blob => {
+        const file = new File([blob], 'sats-dansala-receipt.png', { type: 'image/png' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          navigator.share({ files: [file], title: 'Sats Dansala Receipt', text }).catch(() => {});
+        } else {
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = 'sats-dansala-receipt.png';
+          a.click();
+          URL.revokeObjectURL(a.href);
+        }
+        setImgBusy(false);
+      }, 'image/png'))
+      .catch(() => setImgBusy(false));
+  };
 
   const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
-  const handleNative = () => navigator.share({ title: 'Sats Dansala', text, url }).catch(() => {});
 
   return (
     <div className="share-row">
       <span className="share-label">Share your blessing</span>
       <div className="share-btns">
+        <button className="share-btn share-img-btn" onClick={handleShareImage} disabled={imgBusy}>
+          <Icon name="share" size={14} /><span>{imgBusy ? 'Capturing…' : 'Share Receipt Image'}</span>
+        </button>
         {canShare && (
-          <button className="share-btn" onClick={handleNative} title="Share">
-            <Icon name="share" size={13} /><span>Share</span>
+          <button className="share-btn" onClick={() => navigator.share({ title: 'Sats Dansala', text, url }).catch(() => {})}>
+            <Icon name="share" size={13} /><span>Share text</span>
           </button>
         )}
         <a className="share-btn" href={`https://twitter.com/intent/tweet?text=${enc(text + '\n' + url)}`} target="_blank" rel="noopener">
@@ -115,7 +139,7 @@ function Step({ n, done, locked, verifying, title, desc, actionLabel, icon, onAc
 function Receipt({ result, username, onReset }) {
   const meta = TIER_META[result.tier];
   return (
-    <div className={"receipt-card tier-" + result.tier.toLowerCase()}>
+    <div id="share-receipt" className={"receipt-card tier-" + result.tier.toLowerCase()}>
       <div className="rc-head">
         <span className="rc-kicker">Sats Dansala · Vesak 2026</span>
         <span className="rc-tier" style={{ color: meta.color }}>{result.tier}</span>

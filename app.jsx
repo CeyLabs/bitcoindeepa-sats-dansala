@@ -48,6 +48,50 @@ const TIER_META = {
 
 function fmt(n) { return n.toLocaleString("en-US"); }
 
+function buildShareText(amt, tier) {
+  const msgs = {
+    Jackpot:  `🎆 JACKPOT! Just received ${fmt(amt)} sats at the Bitcoin Deepa Sats Dansala! ⚡🪔 @bitcoindeepa`,
+    Lucky:    `✨ Lucky lantern! Just received ${fmt(amt)} sats at the Bitcoin Deepa Sats Dansala! ⚡🪔 @bitcoindeepa`,
+    Generous: `🪔 A generous pour! Just received ${fmt(amt)} sats at the Bitcoin Deepa Sats Dansala! ⚡ @bitcoindeepa`,
+    Common:   `🪔 Just lit a lantern & claimed ${fmt(amt)} sats at the Bitcoin Deepa Sats Dansala! ⚡ @bitcoindeepa`,
+  };
+  return (msgs[tier] || msgs.Common) + '\n\n#Bitcoin #SatsDansala #Bitcoindeepa #Vesak2026';
+}
+
+function ShareButtons({ amt, tier }) {
+  const url  = window.location.origin + window.location.pathname;
+  const text = buildShareText(amt, tier);
+  const enc  = encodeURIComponent;
+
+  const canShare = typeof navigator !== 'undefined' && typeof navigator.share === 'function';
+  const handleNative = () => navigator.share({ title: 'Sats Dansala', text, url }).catch(() => {});
+
+  return (
+    <div className="share-row">
+      <span className="share-label">Share your blessing</span>
+      <div className="share-btns">
+        {canShare && (
+          <button className="share-btn" onClick={handleNative} title="Share">
+            <Icon name="share" size={15} />
+          </button>
+        )}
+        <a className="share-btn" href={`https://twitter.com/intent/tweet?text=${enc(text + '\n' + url)}`} target="_blank" rel="noopener" title="Share on X">
+          <Icon name="twitter" size={15} />
+        </a>
+        <a className="share-btn" href={`https://wa.me/?text=${enc(text + '\n' + url)}`} target="_blank" rel="noopener" title="Share on WhatsApp">
+          <Icon name="whatsapp" size={15} />
+        </a>
+        <a className="share-btn" href={`https://t.me/share/url?url=${enc(url)}&text=${enc(text)}`} target="_blank" rel="noopener" title="Share on Telegram">
+          <Icon name="telegram" size={15} />
+        </a>
+        <a className="share-btn" href={`https://www.facebook.com/sharer/sharer.php?u=${enc(url)}&quote=${enc(text)}`} target="_blank" rel="noopener" title="Share on Facebook">
+          <Icon name="facebook" size={15} />
+        </a>
+      </div>
+    </div>
+  );
+}
+
 // ── Step row ──────────────────────────────────────────────
 function Step({ n, done, locked, verifying, title, desc, actionLabel, icon, onAction }) {
   return (
@@ -59,13 +103,9 @@ function Step({ n, done, locked, verifying, title, desc, actionLabel, icon, onAc
         <div className="step-title">{title}</div>
         <div className="step-desc">{desc}</div>
       </div>
-      <button className="step-btn" disabled={locked || verifying} onClick={onAction}>
-        {done
-          ? <Icon name="check" size={16} />
-          : verifying
-            ? <span className="spin-ring sm" />
-            : <Icon name={icon} size={16} />}
-        <span>{done ? "Done" : verifying ? "Verifying…" : actionLabel}</span>
+      <button className="step-btn" disabled={locked} onClick={onAction}>
+        {done ? <Icon name="check" size={16} /> : <Icon name={icon} size={16} />}
+        <span>{done ? "Done" : actionLabel}</span>
       </button>
     </div>
   );
@@ -96,6 +136,7 @@ function Receipt({ result, username, onReset }) {
         <div><span>Network</span><span>Lightning ⚡</span></div>
         <div><span>Status</span><span className="rc-ok">Delivered</span></div>
       </div>
+      <ShareButtons amt={result.amt} tier={result.tier} />
       <div className="rc-foot">
         <DeepaMark size={16} ink />
         <button className="rc-reset" onClick={onReset}>Claim again ↺</button>
@@ -340,9 +381,11 @@ function ClaimCard({ t, maxAmount }) {
     setPhase("rolling");
 
     let spins = 0;
+    let lastSpun = 0;
     const spinTimer = setInterval(() => {
       spins++;
-      setDisplay(Math.floor(100 + Math.random() * (maxAmount - 100)));
+      lastSpun = Math.floor(100 + Math.random() * (maxAmount - 100));
+      setDisplay(lastSpun);
       if (spins >= 13) clearInterval(spinTimer);
     }, 55);
 
@@ -371,11 +414,12 @@ function ClaimCard({ t, maxAmount }) {
         setClaimErr("");
         const countUp = (targetAmt, targetTier) => {
           if (spins < 13) { setTimeout(() => countUp(targetAmt, targetTier), 100); return; }
+          const startAmt = lastSpun;
           const t0 = Date.now();
           const up = setInterval(() => {
             const p = Math.min(1, (Date.now() - t0) / 650);
             const e = 1 - Math.pow(1 - p, 3);
-            setDisplay(Math.floor(targetAmt * e));
+            setDisplay(Math.floor(startAmt + (targetAmt - startAmt) * e));
             if (p >= 1) {
               clearInterval(up);
               setDisplay(targetAmt);

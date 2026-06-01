@@ -58,4 +58,10 @@ return [
             [1.0,   90,  100, 'Jackpot'],
         ],
     ],
+
+    // ── Maintenance / send-API outage ─────────────────────────────────────────
+    // Set claims_paused to true to disable the claim button site-wide.
+    // The message is shown to users in the UI.
+    'claims_paused'     => false,
+    'claims_paused_msg' => 'The faucet is resting — our lanterns are being refilled. Check back in a little while!',
 ];

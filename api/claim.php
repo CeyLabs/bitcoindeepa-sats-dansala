@@ -13,6 +13,11 @@ $generosity = get_config()['generosity'] ?? 'balanced';
 
 if (!valid_session_id($sid)) json_err('Invalid session ID.');
 
+$cfg_main = get_config();
+if (!empty($cfg_main['claims_paused'])) {
+    json_err($cfg_main['claims_paused_msg'] ?? 'The faucet is resting — our lanterns are being refilled. Check back in a little while!', 503);
+}
+
 $pdo = get_pdo();
 $row = $pdo->prepare("SELECT status, telegram_id, telegram_username, email, amount, tier, tx_hash, send_error FROM claims WHERE session_id = ?");
 $row->execute([$sid]);

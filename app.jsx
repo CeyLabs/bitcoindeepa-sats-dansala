@@ -283,7 +283,7 @@ function LumaStep({ locked, opened, onOpen, email, setEmail, state, err, onVerif
 }
 
 // ── Claim card (centerpiece) ──────────────────────────────
-function ClaimCard({ t, maxAmount }) {
+function ClaimCard({ t, maxAmount, claimsPaused, claimsPausedMsg }) {
   const [sessionId, setSessionId] = React.useState(null);
   // telegramState: idle | opened | verified
   const [telegramState, setTelegramState] = React.useState("idle");
@@ -534,13 +534,14 @@ function ClaimCard({ t, maxAmount }) {
             value={username} onChange={(e) => setUsername(e.target.value)} />
 
           <button className={"claim-btn" + (phase === "rolling" ? " rolling" : "")}
-            disabled={!ready} onClick={claim}>
+            disabled={!ready || claimsPaused} onClick={claim}>
             {phase === "rolling"
               ? (<React.Fragment><span className="cb-num">{fmt(display)}</span><span className="cb-spin">lighting your lantern…</span></React.Fragment>)
               : (<React.Fragment><Icon name="bolt" size={20} /><span>{ready ? "Claim my sats" : "Complete steps 1 & 2"}</span></React.Fragment>)}
           </button>
 
-          {claimErr && <div className="claim-err"><Icon name="shield" size={14} /><span>{claimErr}</span></div>}
+          {claimsPaused && <div className="claim-err"><Icon name="shield" size={14} /><span>{claimsPausedMsg}</span></div>}
+          {!claimsPaused && claimErr && <div className="claim-err"><Icon name="shield" size={14} /><span>{claimErr}</span></div>}
 
           <div className="cc-fineprint">
             <Icon name="shield" size={14} />
@@ -568,6 +569,8 @@ function App() {
           tiers: d.tiers || CONFIG_DEFAULTS.tiers,
           maxAmount: d.max_amount || CONFIG_DEFAULTS.maxAmount,
           generosity: d.generosity || CONFIG_DEFAULTS.generosity,
+          claimsPaused: !!d.claims_paused,
+          claimsPausedMsg: d.claims_paused_msg || "Claims are temporarily paused. Please check back soon.",
         };
         setCfg(next);
         try { localStorage.setItem(CONFIG_CACHE_KEY, JSON.stringify(next)); } catch (e) {}
@@ -627,7 +630,7 @@ function App() {
         </div>
 
         <div className="hero-claim">
-          <ClaimCard t={t} maxAmount={cfg.maxAmount} />
+          <ClaimCard t={t} maxAmount={cfg.maxAmount} claimsPaused={cfg.claimsPaused} claimsPausedMsg={cfg.claimsPausedMsg} />
         </div>
       </main>
 
